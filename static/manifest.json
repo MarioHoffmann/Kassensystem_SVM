@@ -1,0 +1,20 @@
+{
+  "name": "SVM Kantine",
+  "short_name": "Kantine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#28a745",
+  "icons": [
+    {
+      "src": "/images/SVM_Logo.jfif",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/images/SVM_Logo.jfif",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

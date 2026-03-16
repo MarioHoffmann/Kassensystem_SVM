@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SVM Kantine">
+  <link rel="apple-touch-icon" href="/images/SVM_Logo.jfif">
+  <link rel="manifest" href="/manifest.json">
+  <title>SVM Kantine</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- ───────────── Linke Sidebar ───────────── -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <img src="/images/SVM_Logo.jfif" alt="SVM Logo">
+    </div>
+
+    <!-- Personenauswahl -->
+    <section class="sidebar-section" id="personen-section">
+      <h2 class="section-title">Person</h2>
+
+      <div class="person-select-row">
+        <select id="person-dropdown" class="select-field">
+          <option value="">— Person wählen —</option>
+        </select>
+      </div>
+
+      <div class="person-form" id="person-form" style="display:none">
+        <input type="text" id="input-vorname" class="text-input" placeholder="Vorname *">
+        <input type="text" id="input-nachname" class="text-input" placeholder="Nachname *">
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-person-speichern">Speichern</button>
+          <button class="btn btn-ghost" id="btn-person-abbrechen">Abbrechen</button>
+        </div>
+      </div>
+
+      <div class="btn-row" id="person-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-person-neu">+ Neu</button>
+        <button class="btn btn-danger btn-sm" id="btn-person-loeschen" style="display:none">✕ Löschen</button>
+      </div>
+
+      <p class="status-msg" id="person-status"></p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Warenkorb -->
+    <section class="sidebar-section warenkorb-section" id="warenkorb-section">
+      <div class="warenkorb-header">
+        <h2 class="section-title" id="warenkorb-titel">Bestellung</h2>
+        <span class="person-badge" id="person-badge"></span>
+      </div>
+
+      <div class="warenkorb-liste" id="warenkorb-liste">
+        <p class="empty-hint">Keine Person ausgewählt.</p>
+      </div>
+
+      <div class="warenkorb-footer" id="warenkorb-footer" style="display:none">
+        <div class="gesamt-row">
+          <span>Gesamt</span>
+          <span class="gesamt-preis" id="gesamt-preis">0,00 €</span>
+        </div>
+        <button class="btn btn-success btn-full" id="btn-abschliessen">✓ Bestellung fertig</button>
+      </div>
+    </section>
+  </aside>
+
+  <!-- ───────────── Hauptbereich ───────────── -->
+  <main class="main-content">
+
+    <!-- Tab-Bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="bestellung">🛒 Bestellung</button>
+      <button class="tab-btn" data-tab="dashboard">📋 Offene Beträge</button>
+      <button class="tab-btn" data-tab="statistik">📊 Statistiken</button>
+    </nav>
+
+    <!-- Tab: Bestellung (Produkte) -->
+    <div class="tab-content active" id="tab-bestellung">
+      <!-- Kategorie-Tabs -->
+      <div class="kategorie-bar" id="kategorie-bar">
+        <div class="kategorie-tabs" id="kategorie-tabs"></div>
+        <button class="btn btn-ghost btn-sm" id="btn-kat-neu">+ Kategorie</button>
+      </div>
+
+      <!-- Produkt-Grid -->
+      <div class="produkt-grid" id="produkt-grid">
+        <p class="empty-hint centered">Kategorie wählen oder neue anlegen.</p>
+      </div>
+    </div>
+
+    <!-- Tab: Dashboard Offene Beträge -->
+    <div class="tab-content" id="tab-dashboard">
+      <div class="dashboard-layout">
+        <div class="dashboard-liste" id="dashboard-liste">
+          <p class="empty-hint">Laden…</p>
+        </div>
+        <div class="dashboard-detail" id="dashboard-detail">
+          <div class="detail-placeholder">
+            <span class="big-icon">👤</span>
+            <p>Person links auswählen</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Statistiken -->
+    <div class="tab-content" id="tab-statistik">
+      <!-- Sperr-Screen -->
+      <div class="lock-screen" id="statistik-lock">
+        <span class="big-icon">🔒</span>
+        <h2>Statistik-Dashboard</h2>
+        <p>Dieser Bereich ist passwortgeschützt.</p>
+        <div class="pin-row">
+          <input type="password" id="statistik-pw" class="text-input pin-input" placeholder="Passwort">
+          <button class="btn btn-primary" id="btn-stat-unlock">Entsperren</button>
+        </div>
+        <p class="status-msg error" id="stat-pw-error"></p>
+      </div>
+
+      <!-- Dashboard (nach Login) -->
+      <div id="statistik-dashboard" style="display:none">
+        <div class="stat-header">
+          <h2 class="section-title accent">Statistiken</h2>
+          <button class="btn btn-ghost btn-sm" onclick="refreshStatistik()">↻ Aktualisieren</button>
+        </div>
+
+        <!-- KPI-Kacheln -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Heute</span>
+            <span class="kpi-value accent" id="kpi-heute">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Diese Woche</span>
+            <span class="kpi-value green" id="kpi-woche">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Dieser Monat</span>
+            <span class="kpi-value blue" id="kpi-monat">–</span>
+          </div>
+        </div>
+
+        <!-- Zeitraum-Wahl + Diagramm -->
+        <div class="chart-section">
+          <div class="chart-controls">
+            <span class="section-title">Umsatzverlauf</span>
+            <div class="modus-btns">
+              <button class="btn btn-sm active" data-modus="tag" onclick="setModus('tag')">Täglich</button>
+              <button class="btn btn-sm" data-modus="woche" onclick="setModus('woche')">Wöchentlich</button>
+              <button class="btn btn-sm" data-modus="monat" onclick="setModus('monat')">Monatlich</button>
+            </div>
+          </div>
+          <canvas id="umsatz-chart" class="chart-canvas"></canvas>
+        </div>
+
+        <!-- Top-Produkte -->
+        <div class="top-produkte-section">
+          <h3 class="section-title">Top-Produkte</h3>
+          <div id="top-produkte-table"></div>
+        </div>
+
+        <!-- Personen-Kaufhistorie -->
+        <div class="top-produkte-section" style="margin-top:24px">
+          <h3 class="section-title">👤 Personen-Kaufhistorie</h3>
+          <div class="pin-row" style="margin-bottom:12px">
+            <select id="person-stat-dropdown" class="select-field" onchange="ladePersonenStatistik()">
+              <option value="">— Person wählen —</option>
+            </select>
+          </div>
+          <div id="personen-kaufhistorie-table">
+            <p class="empty-hint">Person oben auswählen.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ───────────── Modals ───────────── -->
+  <div class="modal-backdrop" id="modal-backdrop" style="display:none">
+
+    <!-- Passwort-Modal -->
+    <div class="modal" id="modal-passwort">
+      <h3>🔐 Passwort erforderlich</h3>
+      <p style="color:var(--subtext);font-size:13px;margin-bottom:8px">Bitte Passwort eingeben, um fortzufahren.</p>
+      <input type="password" id="modal-pw-input" class="text-input" placeholder="Passwort">
+      <p class="status-msg error" id="modal-pw-error"></p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="modal-pw-ok">Bestätigen</button>
+        <button class="btn btn-ghost" id="modal-pw-abbruch">Abbrechen</button>
+      </div>
+    </div>
+
+    <!-- Kategorie-Modal -->
+    <div class="modal" id="modal-kategorie" style="display:none">
+      <h3 id="modal-kat-titel">Neue Kategorie</h3>
+      <input type="text" id="modal-kat-name" class="text-input" placeholder="Kategoriename">
+      <p class="status-msg error" id="modal-kat-error"></p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="modal-kat-ok">Speichern</button>
+        <button class="btn btn-danger" id="modal-kat-loeschen" style="display:none">🗑 Löschen</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      </div>
+    </div>
+
+    <!-- Produkt-Modal -->
+    <div class="modal" id="modal-produkt" style="display:none">
+      <h3 id="modal-prod-titel">Neues Produkt</h3>
+      <input type="text" id="modal-prod-name" class="text-input" placeholder="Produktname *">
+      <input type="text" id="modal-prod-preis" class="text-input" placeholder="Preis (z. B. 2.50) *">
+      <p class="status-msg error" id="modal-prod-error"></p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="modal-prod-ok">💾 Speichern</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+      <button class="btn btn-danger btn-full" id="modal-prod-loeschen" style="display:none">🗑 Produkt löschen</button>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/js/app.js?v=4"></script>
+  <script src="/js/personen.js?v=4"></script>
+  <script src="/js/produkte.js?v=4"></script>
+  <script src="/js/bestellung.js?v=4"></script>
+  <script src="/js/dashboard.js?v=4"></script>
+  <script src="/js/statistik.js?v=4"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>
