@@ -2,16 +2,16 @@
 
 let _editProduktId = null;
 let _pwResolve = null;   // Globaler Passwortstatus
-const PRODUKT_PW = "1234";
 
 // ── Passwort-Modal – statische Listener (kein Closure-Problem auf iPad) ───────
 
-document.getElementById("modal-pw-ok").addEventListener("click", () => {
+document.getElementById("modal-pw-ok").addEventListener("click", async () => {
     const eingabe = document.getElementById("modal-pw-input").value;
-    if (eingabe === PRODUKT_PW) {
+    try {
+        await api("POST", "/produkte/auth", { passwort: eingabe });
         closeModal();
         if (_pwResolve) { _pwResolve(true); _pwResolve = null; }
-    } else {
+    } catch (e) {
         document.getElementById("modal-pw-error").textContent = "❌ Falsches Passwort!";
         document.getElementById("modal-pw-input").value = "";
         document.getElementById("modal-pw-input").focus();

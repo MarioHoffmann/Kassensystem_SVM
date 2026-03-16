@@ -7,9 +7,16 @@ from src.models.produkt import (
     KategorieError, ProduktError
 )
 
+from config import PRODUKT_PASSWORT
+
 produkte_bp = Blueprint("produkte", __name__)
 
-# ── Kategorien ────────────────────────────────────────────────────────────────
+@produkte_bp.post("/auth")
+def auth():
+    data = request.get_json()
+    if data.get("passwort") == PRODUKT_PASSWORT:
+        return jsonify({"ok": True})
+    return jsonify({"error": "Falsches Passwort"}), 401# ── Kategorien ────────────────────────────────────────────────────────────────
 
 @produkte_bp.get("/kategorien")
 def get_kategorien():
