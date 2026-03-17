@@ -105,6 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
             await api("POST", "/app/auth", { pin: pin });
             localStorage.setItem("appUnlocked", "true");
             lockScreen.style.display = "none";
+            document.getElementById("sidebar").style.display = "";
+            document.querySelector(".main-content").style.display = "";
             errorMsg.textContent = "";
         } catch (e) {
             errorMsg.textContent = "❌ Falscher PIN!";
