@@ -29,6 +29,17 @@ app.register_blueprint(dashboard_bp,   url_prefix="/api/dashboard")
 app.register_blueprint(statistik_bp,   url_prefix="/api/statistik")
 
 
+from flask import Flask, send_from_directory, request, jsonify
+from config import APP_PIN
+
+@app.post("/api/app/auth")
+def app_auth():
+    data = request.get_json()
+    if data.get("pin") == APP_PIN:
+        return jsonify({"ok": True})
+    return jsonify({"error": "Falscher PIN"}), 401
+
+
 @app.route("/")
 @app.route("/<path:path>")
 def index(path=""):

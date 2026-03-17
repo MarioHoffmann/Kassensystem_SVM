@@ -77,3 +77,45 @@ window.state = {
     bestellungId: null,  // aktuelle Bestellung-ID
     katId: null,         // aktive Kategorie-ID
 };
+
+// ── Global App Lock ──────────────────────────────────────────────────────────
+
+document.addEventListener("DOMContentLoaded", () => {
+    const lockScreen = document.getElementById("global-lock-screen");
+    const pinInput = document.getElementById("global-pin-input");
+    const unlockBtn = document.getElementById("btn-global-unlock");
+    const errorMsg = document.getElementById("global-pin-error");
+
+    if (!lockScreen) return;
+
+    // Prüfen, ob schon entsperrt
+    if (localStorage.getItem("appUnlocked") === "true") {
+        lockScreen.style.display = "none";
+        return;
+    }
+
+    unlockBtn.addEventListener("click", async () => {
+        const pin = pinInput.value;
+        if (!pin) {
+            errorMsg.textContent = "Bitte PIN eingeben.";
+            return;
+        }
+
+        try {
+            await api("POST", "/app/auth", { pin: pin });
+            localStorage.setItem("appUnlocked", "true");
+            lockScreen.style.display = "none";
+            errorMsg.textContent = "";
+        } catch (e) {
+            errorMsg.textContent = "❌ Falscher PIN!";
+            pinInput.value = "";
+            pinInput.focus();
+        }
+    });
+
+    pinInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            unlockBtn.click();
+        }
+    });
+});

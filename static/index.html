@@ -17,6 +17,20 @@
 </head>
 
 <body>
+  <!-- ───────────── Globaler App Sperrbildschirm ───────────── -->
+  <div class="global-lock-screen" id="global-lock-screen">
+    <span class="big-icon">🔒</span>
+    <h2>SVM Kantine</h2>
+    <p>Bitte PIN eingeben, um die Kasse zu entsperren.</p>
+    <div class="pin-row" style="margin-top:20px;">
+      <input type="password" id="global-pin-input" class="text-input pin-input" placeholder="PIN" autocomplete="off">
+    </div>
+    <div class="btn-row" style="justify-content:center; margin-top:10px;">
+      <button class="btn btn-primary" id="btn-global-unlock">Entsperren</button>
+    </div>
+    <p class="status-msg error" id="global-pin-error" style="text-align:center;"></p>
+  </div>
+
   <!-- ───────────── Linke Sidebar ───────────── -->
   <aside class="sidebar" id="sidebar">
 
