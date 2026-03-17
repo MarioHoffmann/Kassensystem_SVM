@@ -83,8 +83,8 @@ def produkt_anlegen(name: str, preis: float, kategorie_id: int) -> int:
     name = name.strip()
     if not name:
         raise ProduktError("Produktname darf nicht leer sein.")
-    if preis <= 0:
-        raise ProduktError("Preis muss größer als 0 sein.")
+    if preis < 0:
+        raise ProduktError("Preis darf nicht negativ sein.")
     with get_connection() as conn:
         cur = conn.execute(
             "INSERT INTO produkte (name, preis, kategorie_id) VALUES (?, ?, ?)",
@@ -97,8 +97,8 @@ def produkt_bearbeiten(produkt_id: int, name: str, preis: float, kategorie_id: i
     name = name.strip()
     if not name:
         raise ProduktError("Produktname darf nicht leer sein.")
-    if preis <= 0:
-        raise ProduktError("Preis muss größer als 0 sein.")
+    if preis < 0:
+        raise ProduktError("Preis darf nicht negativ sein.")
     with get_connection() as conn:
         conn.execute(
             "UPDATE produkte SET name=?, preis=?, kategorie_id=? WHERE id=?",

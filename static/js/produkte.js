@@ -153,7 +153,7 @@ document.getElementById("modal-prod-ok").addEventListener("click", async () => {
     const err = document.getElementById("modal-prod-error");
 
     if (!name) { err.textContent = "Bitte einen Produktnamen eingeben."; return; }
-    if (isNaN(preis) || preis <= 0) { err.textContent = "Bitte einen gültigen Preis eingeben."; return; }
+    if (isNaN(preis) || preis < 0) { err.textContent = "Bitte einen gültigen Preis eingeben (0 ist erlaubt)."; return; }
     err.textContent = "";
 
     try {
