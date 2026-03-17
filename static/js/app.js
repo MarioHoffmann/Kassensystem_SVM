@@ -91,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Prüfen, ob schon entsperrt
     if (localStorage.getItem("appUnlocked") === "true") {
         lockScreen.style.display = "none";
+        document.getElementById("sidebar").style.display = "";
+        document.querySelector(".main-content").style.display = "";
         return;
     }
 
