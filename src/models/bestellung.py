@@ -3,7 +3,7 @@ Kassensystem – Datenmodell Bestellungen & Bestellpositionen (SQLite)
 """
 
 import sqlite3
-from database import get_connection
+from database import get_connection, get_vienna_now
 
 
 def offene_bestellung_fuer_person(person_id: int) -> dict | None:
@@ -18,11 +18,14 @@ def offene_bestellung_fuer_person(person_id: int) -> dict | None:
 
 
 def bestellung_erstellen(person_id: int) -> int:
+    erstellt_am = get_vienna_now().strftime("%Y-%m-%d %H:%M:%S")
     with get_connection() as conn:
         cur = conn.execute(
-            "INSERT INTO bestellungen (person_id) VALUES (?)", (person_id,)
+            "INSERT INTO bestellungen (person_id, erstellt_am) VALUES (?, ?)", (person_id, erstellt_am)
         )
     return cur.lastrowid
+
+
 
 
 def get_oder_erstelle_bestellung(person_id: int) -> int:

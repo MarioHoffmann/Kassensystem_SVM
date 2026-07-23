@@ -13,6 +13,7 @@ BACKUP_DIR = Path.home() / "OneDrive" / "Kassensystem-Backups"
 APP_TITLE = "SVM Kantine"
 
 # Passwörter
-APP_PIN            = "kantine2026"
-PRODUKT_PASSWORT   = "12345"
-STATISTIK_PASSWORT = "admin1"
+APP_PIN                  = "kantine2026"
+PRODUKT_PASSWORT         = "12345"
+STATISTIK_PASSWORT       = "admin1"
+PERSON_LOESCHEN_PASSWORT = "admin1"

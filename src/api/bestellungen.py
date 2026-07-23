@@ -38,8 +38,9 @@ def patch_menge(pos_id):
 
 @bestellungen_bp.post("/<int:bid>/abschliessen")
 def abschliessen(bid):
-    gesamt = gesamtpreis_berechnen(bid)
-    if gesamt == 0:
+    positionen = positionen_der_bestellung(bid)
+    if not positionen:
         return jsonify({"error": "Bestellung ist leer."}), 400
+    gesamt = gesamtpreis_berechnen(bid)
     bestellung_abschliessen(bid)
     return jsonify({"ok": True, "gesamt": gesamt})

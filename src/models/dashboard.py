@@ -2,7 +2,7 @@
 Kassensystem – Datenmodell: Dashboard offene Beträge (SQLite)
 """
 
-from database import get_connection
+from database import get_connection, get_vienna_now
 
 
 def gaeste_mit_offenen_betraegen() -> list[dict]:
@@ -64,10 +64,11 @@ def person_als_bezahlt_markieren(person_id: int):
 
         # 2. In die Tages-Statistik übertragen
         if gesamt > 0:
+            heute = get_vienna_now().strftime("%Y-%m-%d")
             conn.execute(
-                """INSERT INTO statistiken (datum, umsatz) VALUES (date('now','localtime'), ?)
+                """INSERT INTO statistiken (datum, umsatz) VALUES (?, ?)
                    ON CONFLICT(datum) DO UPDATE SET umsatz = umsatz + excluded.umsatz""",
-                (gesamt,)
+                (heute, gesamt)
             )
 
         # 3. Alle offenen Bestellungen der Person als bezahlt markieren

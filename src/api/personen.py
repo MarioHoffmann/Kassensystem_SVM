@@ -1,6 +1,7 @@
 """API Blueprint: Personen"""
 from flask import Blueprint, request, jsonify
 from src.models.person import alle_personen, person_anlegen, person_loeschen, PersonError
+from config import PERSON_LOESCHEN_PASSWORT
 
 personen_bp = Blueprint("personen", __name__)
 
@@ -19,5 +20,8 @@ def post_person():
 
 @personen_bp.delete("/<int:person_id>")
 def delete_person(person_id):
+    data = request.get_json(silent=True) or {}
+    if data.get("passwort") != PERSON_LOESCHEN_PASSWORT:
+        return jsonify({"error": "Falsches Passwort"}), 403
     person_loeschen(person_id)
     return jsonify({"ok": True})

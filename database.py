@@ -2,9 +2,26 @@
 Kassensystem – Datenbankanbindung (SQLite, lokal)
 """
 
+import datetime
 import sqlite3
 from pathlib import Path
 from config import DB_PATH
+
+
+def get_vienna_now() -> datetime.datetime:
+    """Gibt das aktuelle Datum und Uhrzeit für die Zeitzone Europa/Wien (mit Sommer-/Winterzeit) zurück."""
+    utc_now = datetime.datetime.utcnow()
+    year = utc_now.year
+    march_31 = datetime.datetime(year, 3, 31, 1, 0, 0)
+    dst_start = march_31 - datetime.timedelta(days=(march_31.weekday() + 1) % 7)
+    oct_31 = datetime.datetime(year, 10, 31, 1, 0, 0)
+    dst_end = oct_31 - datetime.timedelta(days=(oct_31.weekday() + 1) % 7)
+    
+    if dst_start <= utc_now < dst_end:
+        offset = 2
+    else:
+        offset = 1
+    return utc_now + datetime.timedelta(hours=offset)
 
 
 def get_connection() -> sqlite3.Connection:
@@ -13,6 +30,7 @@ def get_connection() -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")   # stabiler bei mehreren Zugriffen
     conn.execute("PRAGMA foreign_keys=ON")
     return conn
+
 
 
 def init_db():

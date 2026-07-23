@@ -2,42 +2,47 @@
 Kassensystem – Datenmodell Statistiken (SQLite)
 """
 
-from database import get_connection
+from database import get_connection, get_vienna_now
 
 
 def tagesumsaetze(tage: int = 30) -> list[dict]:
+    heute = get_vienna_now().strftime("%Y-%m-%d")
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT datum, umsatz FROM statistiken
-               WHERE datum >= date('now','localtime', ? || ' days')
+               WHERE datum >= date(?, ? || ' days')
                ORDER BY datum""",
-            (f"-{tage}",)
+            (heute, f"-{tage}")
         ).fetchall()
     return [dict(r) for r in rows]
 
 
 def wochen_umsatz() -> list[dict]:
+    heute = get_vienna_now().strftime("%Y-%m-%d")
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT strftime('%Y-KW%W', datum) AS woche,
                       SUM(umsatz) AS umsatz
                FROM statistiken
-               WHERE datum >= date('now','localtime', '-84 days')
+               WHERE datum >= date(?, '-84 days')
                GROUP BY woche
-               ORDER BY woche"""
+               ORDER BY woche""",
+            (heute,)
         ).fetchall()
     return [dict(r) for r in rows]
 
 
 def monats_umsatz() -> list[dict]:
+    heute = get_vienna_now().strftime("%Y-%m-%d")
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT strftime('%Y-%m', datum) AS monat,
                       SUM(umsatz) AS umsatz
                FROM statistiken
-               WHERE datum >= date('now','localtime', '-365 days')
+               WHERE datum >= date(?, '-365 days')
                GROUP BY monat
-               ORDER BY monat"""
+               ORDER BY monat""",
+            (heute,)
         ).fetchall()
     return [dict(r) for r in rows]
 
@@ -59,14 +64,16 @@ def top_produkte(limit: int = 10) -> list[dict]:
 
 
 def zusammenfassung_heute() -> dict:
+    heute = get_vienna_now().strftime("%Y-%m-%d")
     with get_connection() as conn:
         stat = conn.execute(
-            "SELECT umsatz FROM statistiken WHERE datum = date('now','localtime')"
+            "SELECT umsatz FROM statistiken WHERE datum = ?", (heute,)
         ).fetchone()
         bestellungen = conn.execute(
             """SELECT COUNT(*) AS anzahl FROM bestellungen
                WHERE abgeschlossen = 1
-               AND date(erstellt_am) = date('now','localtime')"""
+               AND date(erstellt_am) = ?""",
+            (heute,)
         ).fetchone()
     return {
         "umsatz_heute": stat["umsatz"] if stat else 0.0,
@@ -75,21 +82,27 @@ def zusammenfassung_heute() -> dict:
 
 
 def zusammenfassung_woche() -> dict:
+    heute = get_vienna_now().strftime("%Y-%m-%d")
     with get_connection() as conn:
         stat = conn.execute(
             """SELECT COALESCE(SUM(umsatz), 0) AS umsatz FROM statistiken
-               WHERE datum >= date('now','localtime','weekday 1','-7 days')"""
+               WHERE datum >= date(?,'weekday 1','-7 days')""",
+            (heute,)
         ).fetchone()
     return {"umsatz_woche": stat["umsatz"] if stat else 0.0}
 
 
 def zusammenfassung_monat() -> dict:
+    monat = get_vienna_now().strftime("%Y-%m")
     with get_connection() as conn:
         stat = conn.execute(
             """SELECT COALESCE(SUM(umsatz), 0) AS umsatz FROM statistiken
-               WHERE strftime('%Y-%m', datum) = strftime('%Y-%m', 'now','localtime')"""
+               WHERE strftime('%Y-%m', datum) = ?""",
+            (monat,)
         ).fetchone()
     return {"umsatz_monat": stat["umsatz"] if stat else 0.0}
+
+
 
 
 def kaeufe_pro_person(person_id: int) -> list[dict]:
