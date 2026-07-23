@@ -123,3 +123,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// ── Globales Passwort-Modal (für Admin-Aktionen & Löschen) ──────────────────
+let _pwResolve = null;
+
+document.getElementById("modal-pw-ok").addEventListener("click", async () => {
+    const eingabe = document.getElementById("modal-pw-input").value;
+    try {
+        await api("POST", "/produkte/auth", { passwort: eingabe });
+        closeModal();
+        if (_pwResolve) { _pwResolve(eingabe); _pwResolve = null; }
+    } catch (e) {
+        document.getElementById("modal-pw-error").textContent = "❌ Falsches Passwort!";
+        document.getElementById("modal-pw-input").value = "";
+        document.getElementById("modal-pw-input").focus();
+    }
+});
+
+document.getElementById("modal-pw-abbruch").addEventListener("click", () => {
+    closeModal();
+    if (_pwResolve) { _pwResolve(null); _pwResolve = null; }
+});
+
+document.getElementById("modal-pw-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("modal-pw-ok").click();
+    if (e.key === "Escape") document.getElementById("modal-pw-abbruch").click();
+});
+
+function checkPasswort(title = "🔐 Passwort erforderlich", description = "Bitte Passwort eingeben, um fortzufahren.") {
+    return new Promise((resolve) => {
+        _pwResolve = resolve;
+        
+        // Titel und Beschreibung anpassen
+        const titleEl = document.querySelector("#modal-passwort h3");
+        const descEl = document.querySelector("#modal-passwort p");
+        if (titleEl) titleEl.textContent = title;
+        if (descEl) descEl.textContent = description;
+        
+        openModal("modal-passwort");
+        document.getElementById("modal-pw-input").value = "";
+        document.getElementById("modal-pw-error").textContent = "";
+        setTimeout(() => document.getElementById("modal-pw-input").focus(), 50);
+    });
+}

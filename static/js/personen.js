@@ -82,71 +82,27 @@ btnSpeichern.addEventListener("click", async () => {
 });
 
 // Löschen – Passwort-Modal öffnen
-btnLoeschen.addEventListener("click", () => {
+btnLoeschen.addEventListener("click", async () => {
     if (!state.person) return;
 
-    // Passwort-Modal vorbereiten und öffnen
-    const pwInput = document.getElementById("modal-pw-input");
-    const pwError = document.getElementById("modal-pw-error");
-    const pwOk    = document.getElementById("modal-pw-ok");
-    const pwAbbruch = document.getElementById("modal-pw-abbruch");
+    const title = `🗑️ ${state.person.name} löschen?`;
+    const description = "Achtung: Das komplette Profil wird gelöscht – auch alle offenen Beträge!";
 
-    pwInput.value = "";
-    pwError.textContent = "";
+    const pw = await checkPasswort(title, description);
+    if (!pw) return;
 
-    // Modal-Titel anpassen
-    document.querySelector("#modal-passwort h3").textContent =
-        `🗑️ ${state.person.name} löschen?`;
-    document.querySelector("#modal-passwort p").textContent =
-        "Achtung: Das komplette Profil wird gelöscht – auch alle offenen Beträge!";
-
-    openModal("modal-passwort");
-    setTimeout(() => pwInput.focus(), 100);
-
-    // Einmalige Event-Handler (werden nach Abschluss entfernt)
-    async function doLoeschen() {
-        const pw = pwInput.value;
-        if (!pw) { pwError.textContent = "Bitte Passwort eingeben."; return; }
-        try {
-            await api("DELETE", "/personen/" + state.person.id, { passwort: pw });
-            closeModal();
-            state.person = null;
-            state.bestellungId = null;
-            btnLoeschen.style.display = "none";
-            document.getElementById("person-badge").textContent = "";
-            await ladePersonen();
-            ladeWarenkorb();
-            setPersonStatus("Person erfolgreich gelöscht.");
-        } catch (e) {
-            pwError.textContent = "❌ " + e.message;
-            pwInput.value = "";
-            pwInput.focus();
-        }
+    try {
+        await api("DELETE", "/personen/" + state.person.id, { passwort: pw });
+        state.person = null;
+        state.bestellungId = null;
+        btnLoeschen.style.display = "none";
+        document.getElementById("person-badge").textContent = "";
+        await ladePersonen();
+        ladeWarenkorb();
+        setPersonStatus("Person erfolgreich gelöscht.");
+    } catch (e) {
+        setPersonStatus("❌ " + e.message, true);
     }
-
-    function doAbbruch() {
-        closeModal();
-        cleanup();
-    }
-
-    function onKeydown(e) {
-        if (e.key === "Enter") doLoeschen();
-    }
-
-    function cleanup() {
-        pwOk.removeEventListener("click", doLoeschen);
-        pwAbbruch.removeEventListener("click", doAbbruch);
-        pwInput.removeEventListener("keydown", onKeydown);
-    }
-
-    // Alte Listener entfernen und neue setzen
-    pwOk.replaceWith(pwOk.cloneNode(true));
-    pwAbbruch.replaceWith(pwAbbruch.cloneNode(true));
-    const newOk     = document.getElementById("modal-pw-ok");
-    const newAbbruch = document.getElementById("modal-pw-abbruch");
-    newOk.addEventListener("click", doLoeschen);
-    newAbbruch.addEventListener("click", () => { closeModal(); });
-    pwInput.addEventListener("keydown", onKeydown);
 });
 
 // Init
