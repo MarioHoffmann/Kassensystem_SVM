@@ -77,5 +77,7 @@ def init_db():
                 datum  TEXT NOT NULL UNIQUE,
                 umsatz REAL NOT NULL DEFAULT 0
             );
+            INSERT OR IGNORE INTO kategorien (id, name) VALUES (9999, 'System');
+            INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9999, 'Teilzahlung', 0.0, 9999);
         """)
     print("SQLite-Datenbank bereit:", DB_PATH)

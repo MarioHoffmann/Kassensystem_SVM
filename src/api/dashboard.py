@@ -1,5 +1,5 @@
 """API Blueprint: Dashboard Offene Beträge"""
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 from src.models.dashboard import (
     gaeste_mit_offenen_betraegen,
     offene_bestellungen_der_person,
@@ -21,5 +21,15 @@ def get_person_detail(person_id):
 
 @dashboard_bp.post("/<int:person_id>/bezahlen")
 def bezahlen(person_id):
-    person_als_bezahlt_markieren(person_id)
-    return jsonify({"ok": True})
+    data = request.get_json() or {}
+    gezahlt = data.get("gezahlt")
+    if gezahlt is not None:
+        try:
+            gezahlt = float(str(gezahlt).replace(",", "."))
+        except ValueError:
+            return jsonify({"error": "Ungültiger Betrag"}), 400
+    else:
+        gezahlt = None
+        
+    rueckgeld = person_als_bezahlt_markieren(person_id, gezahlt)
+    return jsonify({"ok": True, "rueckgeld": rueckgeld})

@@ -221,6 +221,18 @@
       </div>
     </div>
 
+    <!-- Bezahlen-Modal -->
+    <div class="modal" id="modal-bezahlen" style="display:none">
+      <h3>💳 Betrag bezahlen</h3>
+      <p style="color:var(--subtext);font-size:13px;margin-bottom:8px" id="modal-bezahlen-offen">Offener Betrag: 0,00 €</p>
+      <input type="text" id="modal-bezahlen-input" class="text-input" placeholder="Gegebener Betrag (z. B. 50)">
+      <p class="status-msg error" id="modal-bezahlen-error"></p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="modal-bezahlen-ok">Bestätigen</button>
+        <button class="btn btn-ghost" id="modal-bezahlen-abbruch">Abbrechen</button>
+      </div>
+    </div>
+
     <!-- Kategorie-Modal -->
     <div class="modal" id="modal-kategorie" style="display:none">
       <h3 id="modal-kat-titel">Neue Kategorie</h3>

@@ -50,11 +50,12 @@ def offene_bestellungen_der_person(person_id: int) -> list[dict]:
     return result
 
 
-def person_als_bezahlt_markieren(person_id: int):
-    """Markiert alle offenen Bestellungen einer Person als bezahlt und verbucht den Umsatz."""
+def person_als_bezahlt_markieren(person_id: int, gezahlt_betrag: float = None) -> float:
+    """Markiert alle offenen Bestellungen einer Person als bezahlt (bzw. teilbezahlt) und verbucht den Umsatz.
+    Gibt das Rückgeld zurück, falls überzahlt wurde."""
     with get_connection() as conn:
         # 1. Gesamtsumme aller aktuell offenen Bestellungen dieser Person berechnen
-        gesamt = conn.execute(
+        gesamt_offen = conn.execute(
             """SELECT COALESCE(SUM(bp.menge * bp.einzelpreis), 0)
                FROM bestellpositionen bp
                JOIN bestellungen b ON bp.bestellung_id = b.id
@@ -62,21 +63,78 @@ def person_als_bezahlt_markieren(person_id: int):
             (person_id,)
         ).fetchone()[0]
 
+        if gesamt_offen <= 0:
+            return 0.0
+
+        # Wenn gezahlt_betrag nicht angegeben ist oder den offenen Betrag übersteigt
+        if gezahlt_betrag is None or gezahlt_betrag < 0:
+            gezahlt_betrag = gesamt_offen
+
+        rueckgeld = 0.0
+        tatsaechlicher_umsatz = gezahlt_betrag
+
+        if gezahlt_betrag >= gesamt_offen:
+            # Alles bezahlt
+            rueckgeld = gezahlt_betrag - gesamt_offen
+            tatsaechlicher_umsatz = gesamt_offen
+            
+            # Alle offenen Bestellungen als bezahlt markieren
+            conn.execute(
+                """UPDATE bestellungen SET bezahlt = 1
+                   WHERE person_id = ? AND abgeschlossen = 1 AND bezahlt = 0""",
+                (person_id,)
+            )
+        else:
+            # Teilzahlung
+            remaining_gezahlt = gezahlt_betrag
+            
+            # Offene Bestellungen chronologisch holen (älteste zuerst)
+            offene_bestellungen = conn.execute(
+                """SELECT id FROM bestellungen
+                   WHERE person_id = ? AND abgeschlossen = 1 AND bezahlt = 0
+                   ORDER BY id ASC""",
+                (person_id,)
+            ).fetchall()
+            
+            for row in offene_bestellungen:
+                bid = row["id"]
+                # Summe dieser Bestellung berechnen
+                bid_sum = conn.execute(
+                    """SELECT COALESCE(SUM(menge * einzelpreis), 0)
+                       FROM bestellpositionen WHERE bestellung_id = ?""",
+                    (bid,)
+                ).fetchone()[0]
+                
+                if bid_sum <= 0:
+                    # Leere Bestellung als bezahlt markieren
+                    conn.execute("UPDATE bestellungen SET bezahlt = 1 WHERE id = ?", (bid,))
+                    continue
+                
+                if bid_sum <= remaining_gezahlt:
+                    # Bestellung wird voll bezahlt
+                    conn.execute("UPDATE bestellungen SET bezahlt = 1 WHERE id = ?", (bid,))
+                    remaining_gezahlt -= bid_sum
+                else:
+                    # Bestellung wird nur teilbezahlt
+                    if remaining_gezahlt > 0:
+                        conn.execute(
+                            """INSERT INTO bestellpositionen (bestellung_id, produkt_id, menge, einzelpreis)
+                               VALUES (?, 9999, 1, ?)""",
+                            (bid, -remaining_gezahlt)
+                        )
+                        remaining_gezahlt = 0.0
+                    break
+
         # 2. In die Tages-Statistik übertragen
-        if gesamt > 0:
+        if tatsaechlicher_umsatz > 0:
             heute = get_vienna_now().strftime("%Y-%m-%d")
             conn.execute(
                 """INSERT INTO statistiken (datum, umsatz) VALUES (?, ?)
                    ON CONFLICT(datum) DO UPDATE SET umsatz = umsatz + excluded.umsatz""",
-                (heute, gesamt)
+                (heute, tatsaechlicher_umsatz)
             )
-
-        # 3. Alle offenen Bestellungen der Person als bezahlt markieren
-        conn.execute(
-            """UPDATE bestellungen SET bezahlt = 1
-               WHERE person_id = ? AND abgeschlossen = 1 AND bezahlt = 0""",
-            (person_id,)
-        )
+            
+        return rueckgeld
 
 
 def gesamt_offen_fuer_person(person_id: int) -> float:

@@ -18,7 +18,7 @@ class ProduktError(Exception):
 
 def alle_kategorien() -> list[dict]:
     with get_connection() as conn:
-        rows = conn.execute("SELECT id, name FROM kategorien ORDER BY name").fetchall()
+        rows = conn.execute("SELECT id, name FROM kategorien WHERE id != 9999 ORDER BY name").fetchall()
     return [dict(r) for r in rows]
 
 
@@ -74,6 +74,7 @@ def alle_produkte() -> list[dict]:
         rows = conn.execute(
             """SELECT p.id, p.name, p.preis, k.name AS kategorie, p.kategorie_id
                FROM produkte p JOIN kategorien k ON p.kategorie_id = k.id
+               WHERE p.kategorie_id != 9999
                ORDER BY k.name, p.name"""
         ).fetchall()
     return [dict(r) for r in rows]

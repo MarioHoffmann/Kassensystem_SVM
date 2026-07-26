@@ -85,9 +85,20 @@ async function ladeGastDetail(gast) {
 
   detail.querySelector("#btn-bezahlen").addEventListener("click", async () => {
     if (!await checkPasswort()) return;
+    
+    const gezahlt = await zeigeBezahlenModal(data.gesamt);
+    if (gezahlt === false) return; // Abgebrochen
+    
     try {
-      await api("POST", `/dashboard/${gast.id}/bezahlen`);
-      showToast(`✓ ${gast.nachname}, ${gast.vorname} – Bezahlt!`);
+      const payload = gezahlt === null ? {} : { gezahlt };
+      const res = await api("POST", `/dashboard/${gast.id}/bezahlen`, payload);
+      
+      if (res.rueckgeld > 0) {
+        showToast(`✓ Bezahlt! Rückgeld: ${eur(res.rueckgeld)}`);
+      } else {
+        showToast(`✓ ${gast.nachname}, ${gast.vorname} – Bezahlt!`);
+      }
+      
       _aktiverGast = null;
       resetDetail();
       ladeDashboard();
@@ -111,3 +122,47 @@ setInterval(() => {
   const dashTab = document.getElementById("tab-dashboard");
   if (dashTab.classList.contains("active")) ladeDashboard();
 }, 10000);
+
+// ── Bezahlen-Modal Event-Listener & Logic ────────────────────────────────────
+let _bezahlenResolve = null;
+
+document.getElementById("modal-bezahlen-ok").addEventListener("click", () => {
+    const eingabe = document.getElementById("modal-bezahlen-input").value.trim().replace(",", ".");
+    if (!eingabe) {
+        closeModal();
+        if (_bezahlenResolve) { _bezahlenResolve(null); _bezahlenResolve = null; }
+        return;
+    }
+    const betrag = parseFloat(eingabe);
+    if (isNaN(betrag) || betrag <= 0) {
+        document.getElementById("modal-bezahlen-error").textContent = "❌ Ungültiger Betrag!";
+        return;
+    }
+    closeModal();
+    if (_bezahlenResolve) { _bezahlenResolve(betrag); _bezahlenResolve = null; }
+});
+
+document.getElementById("modal-bezahlen-abbruch").addEventListener("click", () => {
+    closeModal();
+    if (_bezahlenResolve) { _bezahlenResolve(false); _bezahlenResolve = null; }
+});
+
+document.getElementById("modal-bezahlen-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("modal-bezahlen-ok").click();
+    if (e.key === "Escape") document.getElementById("modal-bezahlen-abbruch").click();
+});
+
+function zeigeBezahlenModal(offen) {
+    return new Promise((resolve) => {
+        _bezahlenResolve = resolve;
+        document.getElementById("modal-bezahlen-offen").textContent = `Offener Betrag: ${eur(offen)}`;
+        document.getElementById("modal-bezahlen-input").value = offen.toFixed(2).replace(".", ",");
+        document.getElementById("modal-bezahlen-error").textContent = "";
+        openModal("modal-bezahlen");
+        setTimeout(() => {
+            const input = document.getElementById("modal-bezahlen-input");
+            input.focus();
+            input.select();
+        }, 50);
+    });
+}
