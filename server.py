@@ -20,6 +20,7 @@ from src.api.dashboard import dashboard_bp
 from src.api.statistik import statistik_bp
 
 app = Flask(__name__, static_folder="static", static_url_path="")
+init_db()
 
 # Blueprints registrieren
 app.register_blueprint(personen_bp,    url_prefix="/api/personen")
