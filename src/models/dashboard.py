@@ -63,7 +63,14 @@ def person_als_bezahlt_markieren(person_id: int, gezahlt_betrag: float = None) -
             (person_id,)
         ).fetchone()[0]
 
-        if gesamt_offen <= 0:
+        # Prüfen, ob überhaupt offene Bestellungen vorliegen
+        offene_anzahl = conn.execute(
+            """SELECT COUNT(*) FROM bestellungen
+               WHERE person_id = ? AND abgeschlossen = 1 AND bezahlt = 0""",
+            (person_id,)
+        ).fetchone()[0]
+
+        if offene_anzahl <= 0:
             return 0.0
 
         # Wenn gezahlt_betrag nicht angegeben ist oder den offenen Betrag übersteigt
