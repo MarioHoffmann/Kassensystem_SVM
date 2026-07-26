@@ -9,15 +9,46 @@ const btnSpeichern = document.getElementById("btn-person-speichern");
 const btnLoeschen = document.getElementById("btn-person-loeschen");
 const personStatus = document.getElementById("person-status");
 
+let _personenListe = [];
+
 async function ladePersonen() {
-    const liste = await api("GET", "/personen/");
+    _personenListe = await api("GET", "/personen/");
+    renderPersonen();
+}
+
+function renderPersonen(filterText = "") {
+    const query = filterText.toLowerCase().trim();
     personDropdown.innerHTML = '<option value="">— Person wählen —</option>';
-    liste.forEach(p => {
+    
+    _personenListe.forEach(p => {
+        const name = `${p.nachname}, ${p.vorname}`;
+        if (query && !name.toLowerCase().includes(query)) return;
+        
         const opt = document.createElement("option");
         opt.value = p.id;
-        opt.textContent = `${p.nachname}, ${p.vorname}`;
+        opt.textContent = name;
         if (state.person && state.person.id === p.id) opt.selected = true;
         personDropdown.appendChild(opt);
+    });
+}
+
+// Suchleiste Event-Listener
+const personSearch = document.getElementById("person-search");
+if (personSearch) {
+    personSearch.addEventListener("input", (e) => {
+        renderPersonen(e.target.value);
+    });
+    
+    personSearch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const options = personDropdown.options;
+            if (options.length > 1) {
+                personDropdown.value = options[1].value;
+                personDropdown.dispatchEvent(new Event("change"));
+                personSearch.value = "";
+                renderPersonen();
+            }
+        }
     });
 }
 
