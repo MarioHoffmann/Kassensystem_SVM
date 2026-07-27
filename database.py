@@ -80,5 +80,6 @@ def init_db():
             INSERT OR IGNORE INTO kategorien (id, name) VALUES (9999, 'System');
             INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9999, 'Teilzahlung', 0.0, 9999);
             INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9998, 'Trinkgeld', 0.0, 9999);
+            INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9997, 'Altsaldo', 0.0, 9999);
         """)
     print("SQLite-Datenbank bereit:", DB_PATH)
