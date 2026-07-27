@@ -40,11 +40,12 @@ def get_oder_erstelle_bestellung(person_id: int) -> int:
 
 
 def bestellung_abschliessen(bestellung_id: int):
-    """Markiert eine Bestellung als abgeschlossen (bereit zum Bezahlen)."""
+    """Markiert eine Bestellung als abgeschlossen (bereit zum Bezahlen) und aktualisiert den Zeitstempel auf den Abschlusszeitpunkt."""
+    jetzt = get_vienna_now().strftime("%Y-%m-%d %H:%M:%S")
     with get_connection() as conn:
         conn.execute(
-            "UPDATE bestellungen SET abgeschlossen = 1 WHERE id = ?",
-            (bestellung_id,)
+            "UPDATE bestellungen SET abgeschlossen = 1, erstellt_am = ? WHERE id = ?",
+            (jetzt, bestellung_id)
         )
 
 
