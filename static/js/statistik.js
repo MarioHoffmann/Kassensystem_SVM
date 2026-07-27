@@ -32,6 +32,17 @@ async function ladeStatistik() {
 
     // KPIs
     document.getElementById("kpi-heute").textContent = eur(data.heute.umsatz_heute);
+    
+    const kpiHeuteSub = document.getElementById("kpi-heute-sub");
+    if (kpiHeuteSub) {
+        if (data.heute.trinkgeld_heute > 0) {
+            kpiHeuteSub.textContent = `(davon ${eur(data.heute.trinkgeld_heute)} Trinkgeld)`;
+            kpiHeuteSub.style.display = "block";
+        } else {
+            kpiHeuteSub.style.display = "none";
+        }
+    }
+    
     document.getElementById("kpi-woche").textContent = eur(data.woche.umsatz_woche);
     document.getElementById("kpi-monat").textContent = eur(data.monat.umsatz_monat);
 

@@ -50,7 +50,7 @@ def offene_bestellungen_der_person(person_id: int) -> list[dict]:
     return result
 
 
-def person_als_bezahlt_markieren(person_id: int, gezahlt_betrag: float = None) -> float:
+def person_als_bezahlt_markieren(person_id: int, gezahlt_betrag: float = None, trinkgeld_buchen: bool = False) -> float:
     """Markiert alle offenen Bestellungen einer Person als bezahlt (bzw. teilbezahlt) und verbucht den Umsatz.
     Gibt das Rückgeld zurück, falls überzahlt wurde."""
     with get_connection() as conn:
@@ -76,6 +76,23 @@ def person_als_bezahlt_markieren(person_id: int, gezahlt_betrag: float = None) -
         # Wenn gezahlt_betrag nicht angegeben ist oder den offenen Betrag übersteigt
         if gezahlt_betrag is None or gezahlt_betrag < 0:
             gezahlt_betrag = gesamt_offen
+
+        # Falls Trinkgeld verbucht werden soll und überzahlt wurde
+        if trinkgeld_buchen and gezahlt_betrag > gesamt_offen:
+            trinkgeld_wert = gezahlt_betrag - gesamt_offen
+            letzte_b = conn.execute(
+                """SELECT id FROM bestellungen
+                   WHERE person_id = ? AND abgeschlossen = 1 AND bezahlt = 0
+                   ORDER BY id DESC LIMIT 1""",
+                (person_id,)
+            ).fetchone()
+            if letzte_b:
+                conn.execute(
+                    """INSERT INTO bestellpositionen (bestellung_id, produkt_id, menge, einzelpreis)
+                       VALUES (?, 9998, 1, ?)""",
+                    (letzte_b["id"], trinkgeld_wert)
+                )
+                gesamt_offen = gezahlt_betrag
 
         rueckgeld = 0.0
         tatsaechlicher_umsatz = gezahlt_betrag

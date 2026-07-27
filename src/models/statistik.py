@@ -75,9 +75,19 @@ def zusammenfassung_heute() -> dict:
                AND date(erstellt_am) = ?""",
             (heute,)
         ).fetchone()
+        trinkgeld = conn.execute(
+            """SELECT COALESCE(SUM(bp.menge * bp.einzelpreis), 0) AS gesamt
+               FROM bestellpositionen bp
+               JOIN bestellungen b ON bp.bestellung_id = b.id
+               WHERE b.abgeschlossen = 1
+                 AND bp.produkt_id = 9998
+                 AND date(b.erstellt_am) = ?""",
+            (heute,)
+        ).fetchone()
     return {
         "umsatz_heute": stat["umsatz"] if stat else 0.0,
         "bestellungen_heute": bestellungen["anzahl"] if bestellungen else 0,
+        "trinkgeld_heute": trinkgeld["gesamt"] if trinkgeld else 0.0,
     }
 
 

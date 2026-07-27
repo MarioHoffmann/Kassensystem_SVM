@@ -766,6 +766,13 @@ body {
   color: var(--accent);
 }
 
+.kpi-sub {
+  display: block;
+  font-size: 13px;
+  color: var(--subtext);
+  margin-top: 4px;
+}
+
 .kpi-value.green {
   color: var(--green);
 }

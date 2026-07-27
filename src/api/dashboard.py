@@ -23,6 +23,7 @@ def get_person_detail(person_id):
 def bezahlen(person_id):
     data = request.get_json() or {}
     gezahlt = data.get("gezahlt")
+    trinkgeld = bool(data.get("trinkgeld", False))
     if gezahlt is not None:
         try:
             gezahlt = float(str(gezahlt).replace(",", "."))
@@ -31,5 +32,5 @@ def bezahlen(person_id):
     else:
         gezahlt = None
         
-    rueckgeld = person_als_bezahlt_markieren(person_id, gezahlt)
+    rueckgeld = person_als_bezahlt_markieren(person_id, gezahlt, trinkgeld)
     return jsonify({"ok": True, "rueckgeld": rueckgeld})

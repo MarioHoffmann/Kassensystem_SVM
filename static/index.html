@@ -161,6 +161,7 @@
           <div class="kpi-card">
             <span class="kpi-label">Heute</span>
             <span class="kpi-value accent" id="kpi-heute">–</span>
+            <span class="kpi-sub" id="kpi-heute-sub" style="display:none"></span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Diese Woche</span>
@@ -228,9 +229,10 @@
       <p style="color:var(--subtext);font-size:13px;margin-bottom:8px" id="modal-bezahlen-offen">Offener Betrag: 0,00 €</p>
       <input type="text" id="modal-bezahlen-input" class="text-input" placeholder="Gegebener Betrag (z. B. 50)">
       <p class="status-msg error" id="modal-bezahlen-error"></p>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="modal-bezahlen-ok">Bestätigen</button>
-        <button class="btn btn-ghost" id="modal-bezahlen-abbruch">Abbrechen</button>
+      <div class="btn-row" style="flex-direction:column;gap:8px">
+        <button class="btn btn-primary btn-full" id="modal-bezahlen-ok">Bestätigen</button>
+        <button class="btn btn-success btn-full" id="modal-bezahlen-trinkgeld" style="display:none">Als Trinkgeld verbuchen</button>
+        <button class="btn btn-ghost btn-full" id="modal-bezahlen-abbruch">Abbrechen</button>
       </div>
     </div>
 
@@ -269,8 +271,8 @@
   <script src="/js/personen.js?v=8"></script>
   <script src="/js/produkte.js?v=6"></script>
   <script src="/js/bestellung.js?v=6"></script>
-  <script src="/js/dashboard.js?v=7"></script>
-  <script src="/js/statistik.js?v=6"></script>
+  <script src="/js/dashboard.js?v=8"></script>
+  <script src="/js/statistik.js?v=7"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
