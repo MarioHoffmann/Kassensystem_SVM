@@ -123,8 +123,13 @@
     <!-- Tab: Dashboard Offene Beträge -->
     <div class="tab-content" id="tab-dashboard">
       <div class="dashboard-layout">
-        <div class="dashboard-liste" id="dashboard-liste">
-          <p class="empty-hint">Laden…</p>
+        <div class="dashboard-liste">
+          <div class="person-search-box" style="margin-bottom: 12px;">
+            <input type="text" id="dashboard-search" class="text-input" placeholder="🔍 Person suchen..." autocomplete="off">
+          </div>
+          <div id="dashboard-items-container">
+            <p class="empty-hint">Laden…</p>
+          </div>
         </div>
         <div class="dashboard-detail" id="dashboard-detail">
           <div class="detail-placeholder">
@@ -271,7 +276,7 @@
   <script src="/js/personen.js?v=8"></script>
   <script src="/js/produkte.js?v=6"></script>
   <script src="/js/bestellung.js?v=6"></script>
-  <script src="/js/dashboard.js?v=8"></script>
+  <script src="/js/dashboard.js?v=9"></script>
   <script src="/js/statistik.js?v=7"></script>
   <script>
     if ('serviceWorker' in navigator) {

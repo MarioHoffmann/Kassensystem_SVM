@@ -565,8 +565,15 @@ body {
   width: 300px;
   min-width: 300px;
   border-right: 1px solid var(--border);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 14px;
+  overflow: hidden;
+}
+
+#dashboard-items-container {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .dashboard-detail {

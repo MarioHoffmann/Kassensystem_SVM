@@ -1,18 +1,33 @@
 /* ─── dashboard.js – Offene Beträge ─── */
 
 let _aktiverGast = null;
+let _dashboardGäste = [];
 
 async function ladeDashboard() {
-  const liste = await api("GET", "/dashboard/");
-  const el = document.getElementById("dashboard-liste");
+  _dashboardGäste = await api("GET", "/dashboard/");
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const query = (document.getElementById("dashboard-search").value || "").toLowerCase().trim();
+  const el = document.getElementById("dashboard-items-container");
   el.innerHTML = "";
 
-  if (liste.length === 0) {
-    el.innerHTML = '<p class="empty-hint" style="color:var(--green)">✓ Keine offenen Beträge.</p>';
+  const gefiltert = _dashboardGäste.filter(g => {
+    const name = `${g.nachname}, ${g.vorname}`.toLowerCase();
+    return name.includes(query);
+  });
+
+  if (gefiltert.length === 0) {
+    if (_dashboardGäste.length === 0) {
+      el.innerHTML = '<p class="empty-hint" style="color:var(--green)">✓ Keine offenen Beträge.</p>';
+    } else {
+      el.innerHTML = '<p class="empty-hint">Keine passende Person gefunden.</p>';
+    }
     return;
   }
 
-  liste.forEach(g => {
+  gefiltert.forEach(g => {
     const card = document.createElement("div");
     card.className = "gast-karte" + ((_aktiverGast && _aktiverGast.id === g.id) ? " selected" : "");
     card.innerHTML = `
@@ -25,10 +40,27 @@ async function ladeDashboard() {
 
   // Wenn noch ein Gast aktiv war, Detail aktualisieren
   if (_aktiverGast) {
-    const aktuell = liste.find(g => g.id === _aktiverGast.id);
+    const aktuell = _dashboardGäste.find(g => g.id === _aktiverGast.id);
     if (aktuell) ladeGastDetail(aktuell);
     else resetDetail();
   }
+}
+
+// Suchleiste Event-Listener
+const dashboardSearch = document.getElementById("dashboard-search");
+if (dashboardSearch) {
+  dashboardSearch.addEventListener("input", renderDashboard);
+  
+  dashboardSearch.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const cards = document.querySelectorAll("#dashboard-items-container .gast-karte");
+      if (cards.length > 0) {
+        cards[0].click();
+        dashboardSearch.value = "";
+        renderDashboard();
+      }
+    }
+  });
 }
 
 async function waehleGast(gast, cardEl) {
