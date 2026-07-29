@@ -32,22 +32,35 @@ function renderPersonen(filterText = "") {
     });
 }
 
-// Suchleiste Event-Listener
+
+
+// Suchleiste Event-Listener mit Auto-Auswahl
 const personSearch = document.getElementById("person-search");
 if (personSearch) {
     personSearch.addEventListener("input", (e) => {
-        renderPersonen(e.target.value);
+        const val = e.target.value;
+        renderPersonen(val);
+        
+        const query = val.toLowerCase().trim();
+        if (query.length > 0) {
+            const options = personDropdown.options;
+            if (options.length > 1) {
+                // Erste gefilterte Person automatisch auswählen
+                personDropdown.value = options[1].value;
+                personDropdown.dispatchEvent(new Event("change"));
+            }
+        } else {
+            // Wenn Suche gelöscht wird, leere Auswahl zurücksetzen
+            personDropdown.value = "";
+            personDropdown.dispatchEvent(new Event("change"));
+        }
     });
     
     personSearch.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
-            const options = personDropdown.options;
-            if (options.length > 1) {
-                personDropdown.value = options[1].value;
-                personDropdown.dispatchEvent(new Event("change"));
-                personSearch.value = "";
-                renderPersonen();
-            }
+            personSearch.value = "";
+            renderPersonen();
+            personSearch.blur(); // Tastatur einklappen
         }
     });
 }
