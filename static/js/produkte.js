@@ -34,7 +34,16 @@ async function ladeKategorienUndProdukte() {
             btn.textContent = k.name;
         }
 
-        btn.addEventListener("click", () => waehleKategorie(k.id));
+        btn.addEventListener("click", () => {
+            if (state.sortMode) return;
+            waehleKategorie(k.id);
+        });
+
+        if (state.sortMode) {
+            btn.draggable = true;
+            makeElementSortable(btn, speichereKategorienReihenfolge);
+        }
+
         bar.appendChild(btn);
     });
 
@@ -54,6 +63,7 @@ async function ladeProdukte(kid) {
     produkte.forEach(p => {
         const card = document.createElement("div");
         card.className = "produkt-karte";
+        card.dataset.pid = p.id;
         card.innerHTML = `
           <span class="produkt-name">${p.name}</span>
           <span class="produkt-preis">${eur(p.preis)}</span>
@@ -63,7 +73,16 @@ async function ladeProdukte(kid) {
             e.stopPropagation();
             oeffneProduktEditModal(p);
         });
-        card.addEventListener("click", () => produktGeklickt(p));
+        card.addEventListener("click", () => {
+            if (state.sortMode) return;
+            produktGeklickt(p);
+        });
+
+        if (state.sortMode) {
+            card.draggable = true;
+            makeElementSortable(card, speichereProdukteReihenfolge);
+        }
+
         grid.appendChild(card);
     });
 
@@ -71,7 +90,10 @@ async function ladeProdukte(kid) {
     const addBtn = document.createElement("div");
     addBtn.className = "produkt-karte add-produkt-btn";
     addBtn.innerHTML = `<span style="font-size:28px">+</span><span class="produkt-name" style="color:var(--subtext)">Produkt</span>`;
-    addBtn.addEventListener("click", () => oeffneNeuesProduktModal());
+    addBtn.addEventListener("click", () => {
+        if (state.sortMode) return;
+        oeffneNeuesProduktModal();
+    });
     grid.appendChild(addBtn);
 }
 
@@ -243,6 +265,119 @@ document.getElementById("modal-kat-name").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("modal-prod-ok").click();
     });
 });
+
+// ── Sortier-Modus Toggler & Helpers ──────────────────────────────────────────
+state.sortMode = false;
+let draggedElement = null;
+
+const sortToggle = document.getElementById("btn-sort-toggle");
+if (sortToggle) {
+    sortToggle.addEventListener("click", async () => {
+        if (!state.sortMode) {
+            // Beim Aktivieren das Passwort abfragen
+            if (!await checkPasswort()) return;
+            state.sortMode = true;
+            sortToggle.textContent = "✓ Fertig";
+            sortToggle.classList.add("btn-success");
+            document.getElementById("tab-bestellung").classList.add("sort-mode");
+        } else {
+            state.sortMode = false;
+            sortToggle.textContent = "Sortieren ⇄";
+            sortToggle.classList.remove("btn-success");
+            document.getElementById("tab-bestellung").classList.remove("sort-mode");
+        }
+        await ladeKategorienUndProdukte();
+    });
+}
+
+function makeElementSortable(el, onDropCallback) {
+    // Desktop Drag & Drop
+    el.addEventListener("dragstart", function(e) {
+        draggedElement = this;
+        e.dataTransfer.effectAllowed = "move";
+    });
+    
+    el.addEventListener("dragover", function(e) {
+        e.preventDefault();
+        if (draggedElement && draggedElement !== this && draggedElement.parentNode === this.parentNode) {
+            const children = Array.from(this.parentNode.children);
+            const draggedIdx = children.indexOf(draggedElement);
+            const siblingIdx = children.indexOf(this);
+            if (draggedIdx < siblingIdx) {
+                this.parentNode.insertBefore(draggedElement, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(draggedElement, this);
+            }
+        }
+    });
+    
+    el.addEventListener("drop", function(e) {
+        e.preventDefault();
+    });
+    
+    el.addEventListener("dragend", function(e) {
+        draggedElement = null;
+        onDropCallback();
+    });
+    
+    // Mobile/Tablet Touch Drag & Drop
+    el.addEventListener("touchstart", function(e) {
+        if (!state.sortMode) return;
+        draggedElement = this;
+        // Prevent scrolling while dragging
+        e.stopPropagation();
+    }, { passive: true });
+    
+    el.addEventListener("touchmove", function(e) {
+        if (!state.sortMode || !draggedElement) return;
+        
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!target) return;
+        
+        const sibling = target.closest(".kat-tab") || target.closest(".produkt-karte");
+        if (sibling && sibling.parentNode === draggedElement.parentNode && draggedElement !== sibling) {
+            if (sibling.classList.contains("add-produkt-btn")) return;
+            
+            const children = Array.from(sibling.parentNode.children);
+            const draggedIdx = children.indexOf(draggedElement);
+            const siblingIdx = children.indexOf(sibling);
+            if (draggedIdx < siblingIdx) {
+                sibling.parentNode.insertBefore(draggedElement, sibling.nextSibling);
+            } else {
+                sibling.parentNode.insertBefore(draggedElement, sibling);
+            }
+        }
+    });
+    
+    el.addEventListener("touchend", function(e) {
+        if (!state.sortMode || !draggedElement) return;
+        draggedElement = null;
+        onDropCallback();
+    });
+}
+
+async function speichereKategorienReihenfolge() {
+    const ids = Array.from(document.querySelectorAll("#kategorie-tabs .kat-tab")).map(btn => parseInt(btn.dataset.kid)).filter(id => !isNaN(id));
+    try {
+        await api("POST", "/produkte/kategorien/reorder", { ids });
+    } catch (e) {
+        showToast(e.message, true);
+    }
+}
+
+async function speichereProdukteReihenfolge() {
+    const ids = Array.from(document.querySelectorAll("#produkt-grid .produkt-karte")).map(card => parseInt(card.dataset.pid)).filter(id => !isNaN(id));
+    try {
+        await api("POST", "/produkte/reorder", { ids });
+        // Add button wieder ans Ende schieben
+        const grid = document.getElementById("produkt-grid");
+        const addBtn = grid.querySelector(".add-produkt-btn");
+        if (addBtn) grid.appendChild(addBtn);
+    } catch (e) {
+        showToast(e.message, true);
+    }
+}
 
 // Init
 ladeKategorienUndProdukte();

@@ -18,7 +18,7 @@ class ProduktError(Exception):
 
 def alle_kategorien() -> list[dict]:
     with get_connection() as conn:
-        rows = conn.execute("SELECT id, name FROM kategorien WHERE id != 9999 AND archiviert = 0 ORDER BY name").fetchall()
+        rows = conn.execute("SELECT id, name FROM kategorien WHERE id != 9999 AND archiviert = 0 ORDER BY sort_order ASC, name ASC").fetchall()
     return [dict(r) for r in rows]
 
 
@@ -60,7 +60,7 @@ def produkte_der_kategorie(kategorie_id: int) -> list[dict]:
             """SELECT p.id, p.name, p.preis, k.name AS kategorie
                FROM produkte p JOIN kategorien k ON p.kategorie_id = k.id
                WHERE p.kategorie_id = ? AND p.archiviert = 0
-               ORDER BY p.name""",
+               ORDER BY p.sort_order ASC, p.name ASC""",
             (kategorie_id,)
         ).fetchall()
     return [dict(r) for r in rows]
@@ -72,7 +72,7 @@ def alle_produkte() -> list[dict]:
             """SELECT p.id, p.name, p.preis, k.name AS kategorie, p.kategorie_id
                FROM produkte p JOIN kategorien k ON p.kategorie_id = k.id
                WHERE p.kategorie_id != 9999 AND p.archiviert = 0
-               ORDER BY k.name, p.name"""
+               ORDER BY k.sort_order ASC, k.name ASC, p.sort_order ASC, p.name ASC"""
         ).fetchall()
     return [dict(r) for r in rows]
 
@@ -107,3 +107,15 @@ def produkt_bearbeiten(produkt_id: int, name: str, preis: float, kategorie_id: i
 def produkt_loeschen(produkt_id: int):
     with get_connection() as conn:
         conn.execute("UPDATE produkte SET archiviert = 1 WHERE id = ?", (produkt_id,))
+
+
+def kategorien_reihenfolge_speichern(ids: list[int]):
+    with get_connection() as conn:
+        for idx, kid in enumerate(ids):
+            conn.execute("UPDATE kategorien SET sort_order = ? WHERE id = ?", (idx, kid))
+
+
+def produkte_reihenfolge_speichern(ids: list[int]):
+    with get_connection() as conn:
+        for idx, pid in enumerate(ids):
+            conn.execute("UPDATE produkte SET sort_order = ? WHERE id = ?", (idx, pid))

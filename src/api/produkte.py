@@ -4,6 +4,7 @@ from src.models.produkt import (
     alle_kategorien, kategorie_anlegen, kategorie_loeschen,
     produkte_der_kategorie, alle_produkte,
     produkt_anlegen, produkt_bearbeiten, produkt_loeschen,
+    kategorien_reihenfolge_speichern, produkte_reihenfolge_speichern,
     KategorieError, ProduktError
 )
 
@@ -48,6 +49,13 @@ def delete_kategorie(kid):
     except KategorieError as e:
         return jsonify({"error": str(e)}), 400
 
+@produkte_bp.post("/kategorien/reorder")
+def reorder_kategorien():
+    data = request.get_json()
+    ids = data.get("ids", [])
+    kategorien_reihenfolge_speichern(ids)
+    return jsonify({"ok": True})
+
 # ── Produkte ──────────────────────────────────────────────────────────────────
 
 @produkte_bp.get("/")
@@ -80,4 +88,11 @@ def put_produkt(pid):
 @produkte_bp.delete("/<int:pid>")
 def delete_produkt(pid):
     produkt_loeschen(pid)
+    return jsonify({"ok": True})
+
+@produkte_bp.post("/reorder")
+def reorder_produkte():
+    data = request.get_json()
+    ids = data.get("ids", [])
+    produkte_reihenfolge_speichern(ids)
     return jsonify({"ok": True})

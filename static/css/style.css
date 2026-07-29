@@ -989,3 +989,22 @@ body {
   color: var(--subtext);
   margin-bottom: 20px;
 }
+
+/* ── Sortier-Modus ────────────────────────────── */
+.sort-mode .kat-tab:not(#btn-kat-neu):not(#btn-sort-toggle),
+.sort-mode .produkt-karte:not(.add-produkt-btn) {
+  cursor: move !important;
+  border: 2px dashed var(--accent) !important;
+  opacity: 0.85;
+  animation: shake 0.3s infinite alternate;
+}
+
+.sort-mode .produkt-edit-btn,
+.sort-mode .kat-edit-icon {
+  display: none !important;
+}
+
+@keyframes shake {
+  0% { transform: rotate(-0.5deg); }
+  100% { transform: rotate(0.5deg); }
+}

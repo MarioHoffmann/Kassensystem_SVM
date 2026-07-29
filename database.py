@@ -93,4 +93,14 @@ def init_db():
         except sqlite3.OperationalError:
             pass
             
+        # Migrationen für Sortierung
+        try:
+            conn.execute("ALTER TABLE kategorien ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute("ALTER TABLE produkte ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+            
     print("SQLite-Datenbank bereit:", DB_PATH)
