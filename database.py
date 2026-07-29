@@ -82,4 +82,15 @@ def init_db():
             INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9998, 'Trinkgeld', 0.0, 9999);
             INSERT OR IGNORE INTO produkte (id, name, preis, kategorie_id) VALUES (9997, 'Altsaldo', 0.0, 9999);
         """)
+        
+        # Migrationen für Soft-Delete
+        try:
+            conn.execute("ALTER TABLE kategorien ADD COLUMN archiviert INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            conn.execute("ALTER TABLE produkte ADD COLUMN archiviert INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+            
     print("SQLite-Datenbank bereit:", DB_PATH)
