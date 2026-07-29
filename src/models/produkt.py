@@ -47,12 +47,22 @@ def kategorie_bearbeiten(kategorie_id: int, name: str):
 
 def kategorie_loeschen(kategorie_id: int):
     with get_connection() as conn:
-        count = conn.execute(
-            "SELECT COUNT(*) FROM produkte WHERE kategorie_id = ?", (kategorie_id,)
-        ).fetchone()[0]
-        if count > 0:
-            raise KategorieError("Kategorie enthält noch Produkte.")
-        conn.execute("DELETE FROM kategorien WHERE id = ?", (kategorie_id,))
+        # Finde alle Produkte in dieser Kategorie
+        produkte = conn.execute(
+            "SELECT id, name FROM produkte WHERE kategorie_id = ?", (kategorie_id,)
+        ).fetchall()
+        
+        # Versuche alle Produkte in der Kategorie zu löschen
+        for p in produkte:
+            try:
+                conn.execute("DELETE FROM produkte WHERE id = ?", (p["id"],))
+            except sqlite3.IntegrityError:
+                raise KategorieError(f"Kategorie kann nicht gelöscht werden, da das Produkt '{p['name']}' bereits in Bestellungen verwendet wird.")
+        
+        try:
+            conn.execute("DELETE FROM kategorien WHERE id = ?", (kategorie_id,))
+        except sqlite3.IntegrityError:
+            raise KategorieError("Kategorie kann nicht gelöscht werden.")
 
 
 # ─────────────────────────────────── Produkte ────────────────────────────────
